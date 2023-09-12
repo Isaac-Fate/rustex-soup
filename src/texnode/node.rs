@@ -5,6 +5,7 @@ use super::{
     span::Span,
     text::{Text, extract_text},
     comment::{Comment, extract_comment},
+    inline_math::{InlineMath, extract_inline_math},
     group::{Group, extract_group},
     square_group::{SquareGroup, extract_square_group},
     command::{Command, extract_command},
@@ -15,6 +16,7 @@ use super::{
 pub enum TexNode {
     Text(Text),
     Comment(Comment),
+    InlineMath(InlineMath),
     Group(Group),
     SquareGroup(SquareGroup),
     Command(Command),
@@ -25,10 +27,12 @@ impl TexNode {
     pub fn span(&self) -> Span {
         match self {
             Self::Text(text) => text.span,
+            Self::Comment(comment) => comment.span,
+            Self::InlineMath(inline_math) => inline_math.span,
             Self::Group(group) => group.span,
             Self::SquareGroup(square_group) => square_group.span,
             Self::Command(command) => command.span,
-            _ => Span { start: 0, end: 0 }
+            Self::Environment(environment) => environment.span
         }
     }
 }
@@ -40,6 +44,8 @@ pub fn extract_node(tex: &str, start: usize) -> Result<TexNode> {
         Ok(TexNode::Text(text))
     } else if let Some(comment) = extract_comment(tex, start) {
         Ok(TexNode::Comment(comment))
+    } else if let Some(inline_math) = extract_inline_math(tex, start) {
+        Ok(TexNode::InlineMath(inline_math))
     } else if let Some(group) = extract_group(tex, start) {
         Ok(TexNode::Group(group))
     } else if let Some(environment) = extract_environment(tex, start) {
@@ -75,19 +81,19 @@ mod tests {
     const TEX: &'static str = r#"
 \section{Introduction}
 Hello, world!
-\section{Theory}"#;
-// An operator $T$ is \textbf{self-adjoint} if $T^\ast = T$, i.e.,
-// it is own adjoint.
-// "#;
+\section{Theory}
+An operator $T$ is \textbf{self-adjoint} if $T^\ast = T$, i.e.,
+it is own adjoint.
+"#;
 
     #[test]
-    fn succeed_to_extract_nodes() {
+    fn succeed_in_extracting_nodes() {
         let nodes = extract_nodes(TEX, 0, TEX.len()).unwrap();
         println!("{:#?}", nodes);
     }
 
     #[test]
-    fn succeed_to_extract_text_nodes() {
+    fn succeed_in_extracting_text_nodes() {
         let text = extract_node(TEX, 0).unwrap();
         assert_eq!(
             text, 

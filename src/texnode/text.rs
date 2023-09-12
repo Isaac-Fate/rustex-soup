@@ -4,7 +4,7 @@ use regex::Regex;
 use super::span::Span;
 
 lazy_static! {
-    static ref TEXT_RE: Regex = Regex::new(r#"^[a-zA-Z0-9\s.,?!:;"'/@#&*+-=\(\)\[\]]+"#)
+    static ref TEXT_RE: Regex = Regex::new(r#"^[a-zA-Z0-9\s,.?/:;"'!@#\^&*\(\)_\-+=\[\]|]+"#)
         .unwrap();
 }
 
